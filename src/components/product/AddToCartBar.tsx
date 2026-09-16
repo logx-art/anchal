@@ -42,15 +42,16 @@ export function AddToCartBar({
       if (!json.success) throw new Error(json.error?.message ?? "Couldn't add to cart.");
       setStatus("added");
       setTimeout(() => setStatus("idle"), 2000);
+      return true;
     } catch (err) {
       setStatus("error");
       setErrorMessage(err instanceof Error ? err.message : "Something went wrong.");
+      return false;
     }
   }
 
   async function buyNow() {
-    await addToCart();
-    router.push("/checkout");
+    if (await addToCart()) router.push("/checkout");
   }
 
   async function toggleWishlist() {

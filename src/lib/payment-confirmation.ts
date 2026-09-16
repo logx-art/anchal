@@ -9,14 +9,21 @@ export async function confirmPaidOrder(params: {
   razorpayPaymentId: string;
   razorpaySignature?: string;
 }) {
-  const order = await prisma.order.findUnique({ where: { orderNumber: params.orderNumber } });
+  const order = await prisma.order.findUnique({
+    where: { orderNumber: params.orderNumber },
+    include: { payment: true },
+  });
   if (!order) return;
+
+  if (!order.payment || order.payment.razorpayOrderId !== params.razorpayOrderId) {
+    throw new Error("Payment does not belong to this order.");
+  }
 
   if (order.paymentStatus === "PAID") return;
 
   await prisma.$transaction([
     prisma.payment.update({
-      where: { orderId: order.id },
+      where: { id: order.payment.id },
       data: {
         razorpayPaymentId: params.razorpayPaymentId,
         razorpaySignature: params.razorpaySignature,

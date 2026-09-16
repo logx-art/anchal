@@ -167,6 +167,9 @@ export async function addCartItem(
   });
 
   if (existing) {
+    if (existing.quantity + quantity > availableStock) {
+      throw new Error(`Only ${availableStock} left in stock.`);
+    }
     return prisma.cartItem.update({
       where: { id: existing.id },
       data: { quantity: existing.quantity + quantity },

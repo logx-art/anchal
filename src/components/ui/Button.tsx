@@ -28,6 +28,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   ({ variant = "primary", size = "md", className, ...props }, ref) => (
     <button
       ref={ref}
+      type={props.type ?? "button"}
       className={clsx(base, variants[variant], sizes[size], className)}
       {...props}
     />

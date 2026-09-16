@@ -33,7 +33,7 @@ export function NewsletterForm({ className }: { className?: string }) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className={clsx("flex gap-2", className)}>
+    <form onSubmit={handleSubmit} className={clsx("flex flex-col gap-2 sm:flex-row", className)}>
       <label htmlFor="newsletter-email" className="sr-only">
         Email address
       </label>
@@ -53,7 +53,7 @@ export function NewsletterForm({ className }: { className?: string }) {
       >
         {status === "loading" ? "Joining…" : "Subscribe"}
       </button>
-      {status === "error" && <p className="text-xs text-terracotta">{message}</p>}
+      {status === "error" && <p className="text-xs text-terracotta sm:basis-full">{message}</p>}
     </form>
   );
 }

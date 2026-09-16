@@ -9,6 +9,12 @@
 
   body {
     @apply bg-cream text-charcoal antialiased;
+    overflow-x: hidden;
+  }
+
+  img,
+  svg {
+    max-width: 100%;
   }
 
   /* Visible keyboard focus everywhere — never suppressed for aesthetics. */

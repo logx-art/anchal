@@ -5,23 +5,21 @@ import crypto from "crypto";
 // Razorpay secret. It's only ever called from app/api/** route handlers,
 // which run exclusively on the server.
 
-if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
-  // Fails loudly at boot in any environment missing the keys, rather than
-  // failing silently the first time a customer tries to pay.
-  console.warn(
-    "[razorpay] RAZORPAY_KEY_ID / RAZORPAY_KEY_SECRET are not set. Payment routes will fail until they are configured in .env."
-  );
-}
+function getRazorpayClient() {
+  const keyId = process.env.RAZORPAY_KEY_ID;
+  const keySecret = process.env.RAZORPAY_KEY_SECRET;
 
-export const razorpay = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID ?? "",
-  key_secret: process.env.RAZORPAY_KEY_SECRET ?? "",
-});
+  if (!keyId || !keySecret) {
+    throw new Error("Razorpay is not configured. Add RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET.");
+  }
+
+  return new Razorpay({ key_id: keyId, key_secret: keySecret });
+}
 
 /** Creates a Razorpay order. Amount must be passed in the smallest currency
  * unit (paise), matching Razorpay's API contract. */
 export async function createRazorpayOrder(amountInRupees: number, receiptId: string) {
-  return razorpay.orders.create({
+  return getRazorpayClient().orders.create({
     amount: Math.round(amountInRupees * 100),
     currency: "INR",
     receipt: receiptId,
@@ -47,11 +45,15 @@ export function verifyPaymentSignature(params: {
     .update(`${razorpayOrderId}|${razorpayPaymentId}`)
     .digest("hex");
 
+  const expected = Buffer.from(expectedSignature, "utf-8");
+  const received = Buffer.from(razorpaySignature, "utf-8");
+  if (expected.length !== received.length) return false;
+
   // Constant-time comparison — prevents a timing attack from leaking the
   // correct signature byte-by-byte.
   return crypto.timingSafeEqual(
-    Buffer.from(expectedSignature, "utf-8"),
-    Buffer.from(razorpaySignature, "utf-8")
+    expected,
+    received
   );
 }
 
@@ -68,8 +70,9 @@ export function verifyWebhookSignature(rawBody: string, signatureHeader: string)
     .update(rawBody)
     .digest("hex");
 
-  return crypto.timingSafeEqual(
-    Buffer.from(expectedSignature, "utf-8"),
-    Buffer.from(signatureHeader, "utf-8")
-  );
+  const expected = Buffer.from(expectedSignature, "utf-8");
+  const received = Buffer.from(signatureHeader, "utf-8");
+  if (expected.length !== received.length) return false;
+
+  return crypto.timingSafeEqual(expected, received);
 }

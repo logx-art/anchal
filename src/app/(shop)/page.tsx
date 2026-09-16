@@ -10,14 +10,18 @@ import { InstagramGallery } from "@/components/home/InstagramGallery";
 import { NewsletterForm } from "@/components/home/NewsletterForm";
 
 export default async function HomePage() {
-  const [categories, heroBanners, promoBanners, featured, newArrivals, sale] = await Promise.all([
-    getActiveCategories(),
-    getHeroBanners(),
-    getPromoBanners(),
-    getFeaturedProducts(),
-    getNewArrivals(),
-    getSaleProducts(),
-  ]);
+  const [categories, heroBanners, promoBanners, featured, newArrivals, sale] =
+    await Promise.all([
+      getActiveCategories(),
+      getHeroBanners(),
+      getPromoBanners(),
+      getFeaturedProducts(),
+      getNewArrivals(),
+      getSaleProducts(),
+    ]).catch((error) => {
+      console.error("[homepage] catalog unavailable:", error);
+      return [[], [], [], [], [], []];
+    });
 
   const hero = heroBanners[0];
 
